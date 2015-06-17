@@ -1,0 +1,64 @@
+
+### Project 1
+
+<http://en.wikipedia.org/wiki/List_of_Belgian_beer>.
+
+
+```{r, echo=FALSE}
+library(XML)
+theurl <- "http://en.wikipedia.org/wiki/List_of_Belgian_beer"
+tables <- readHTMLTable(theurl)
+tblcount <- length(tables)
+
+n_rows <- unlist(lapply(tables, function(t) dim(t)[1]))
+
+col_names <- colnames(tables[[2]])
+col_names[c(2, 3)] <- c("Type", "ABV")
+
+i <- 2
+beerdf <- read.table(text = "", col.names = col_names)
+
+for (i in 2:tblcount)
+  {
+    if (colnames(tables[[i]][1]) == "Brand") {
+      beerdf <- rbind(beerdf, tables[[i]])
+    }
+    i <- i + 1
+  }
+
+colnames(beerdf) <- col_names
+
+beerdf$ABV2 <- as.numeric(as.numeric(gsub("%", "", beerdf$ABV)))
+
+summary(beerdf)
+```
+
+A simple Histogram using qplot with default settings:
+
+```{r}
+library(ggplot2)
+qplot(ABV2, data=beerdf, geom="histogram")
+```
+
+Adding some colour, Titles and adjusting the X-axis
+```{r}
+library(ggplot2)
+qplot(beerdf$ABV2,
+      geom="histogram",
+      binwidth = 0.5,  
+      main = "Histogram for Belgian Beers' Alcohol Percentage Value", 
+      xlab = "Alcohol by Volume",  
+      fill=I("orange"), 
+      col=I("red"), 
+      #alpha=I(.2),
+      xlim=c(0,15))
+```
+
+Now we can make a bit more advanced graph, adding some colour:
+
+```{r}
+library(ggplot2)
+m <- ggplot(beerdf, aes(x=ABV2))
+m + geom_histogram(aes(fill = ..count..)) +
+  scale_fill_gradient("Count", low = "orange", high = "brown")
+```
